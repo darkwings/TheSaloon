@@ -2,6 +2,7 @@
 import json
 import asyncio
 import os
+import re
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -138,5 +139,8 @@ class SettingUpdate(BaseModel):
 
 @app.put("/api/settings")
 async def update_setting(req: SettingUpdate):
+    # Validate key format: alphanumeric with underscores, must start with letter
+    if not re.match(r'^[A-Za-z][A-Za-z0-9_]*$', req.key):
+        return JSONResponse(status_code=400, content={"error": f"Invalid setting key: {req.key}"})
     await db.set_setting(req.key, req.value)
     return {"status": "updated"}
