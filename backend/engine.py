@@ -112,6 +112,7 @@ class ConversationEngine:
 
             shuffled = random.sample(self._agents, len(self._agents))
             moderator_input_this_cycle = self._moderator_input
+            self._moderator_input = ""  # clear immediately before any await
 
             for i, agent in enumerate(shuffled):
                 if self._stopped:
@@ -120,8 +121,6 @@ class ConversationEngine:
 
                 # First agent in cycle consumes the moderator input
                 current_moderator = moderator_input_this_cycle if i == 0 else ""
-                if i == 0:
-                    self._moderator_input = ""  # clear after first agent reads it
 
                 await self._broadcast({"type": "agent_thinking", "agent": agent.name})
 
@@ -134,7 +133,7 @@ class ConversationEngine:
                         moderator_input=current_moderator,
                     )
                 except Exception as e:
-                    text = f"[error: {str(e)}]"
+                    continue
 
                 if not text:
                     continue
