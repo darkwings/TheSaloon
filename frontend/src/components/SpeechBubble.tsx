@@ -26,11 +26,15 @@ export default function SpeechBubble({ text, color, onDismiss }: Props) {
 
   // Auto-dismiss after 5 seconds
   useEffect(() => {
+    let fadeTimer: ReturnType<typeof setTimeout>
     const timeout = setTimeout(() => {
       setVisible(false)
-      setTimeout(onDismiss, 300)
+      fadeTimer = setTimeout(onDismiss, 300)
     }, 5000)
-    return () => clearTimeout(timeout)
+    return () => {
+      clearTimeout(timeout)
+      clearTimeout(fadeTimer)
+    }
   }, [text, onDismiss])
 
   return (

@@ -1,5 +1,5 @@
 // frontend/src/components/Character.tsx
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { AgentMeta, ChatMessage } from '../types'
 import SpeechBubble from './SpeechBubble'
 
@@ -89,9 +89,11 @@ export default function Character({ agent, isTalking, isThinking, lastMessage }:
   const dismiss = useCallback(() => setBubble(null), [])
 
   // Sync bubble with lastMessage prop
-  if (lastMessage && bubble?.id !== lastMessage.id) {
-    setBubble(lastMessage)
-  }
+  useEffect(() => {
+    if (lastMessage && bubble?.id !== lastMessage.id) {
+      setBubble(lastMessage)
+    }
+  }, [lastMessage])
 
   return (
     <>
