@@ -111,13 +111,15 @@ Each system prompt defines:
 
 ### Conversation flow
 
-1. User submits a topic → FE sends `set_topic` via WebSocket
-2. Backend creates a new `conversation` record in SQLite, injects topic into ADK `session.state`
-3. `ConversationEngine` starts/resumes the LoopAgent
+Commands travel via REST. WebSocket is receive-only (server → client events).
+
+1. User submits a topic → FE calls `POST /api/conversations/start { topic }`
+2. Backend creates a `conversation` record in SQLite, injects topic into ADK `session.state`, starts LoopAgent
+3. Backend broadcasts `{ type: "topic_set", topic, conversation_id }` via WebSocket
 4. Each loop iteration: shuffle agent order → execute agents sequentially with `asyncio.sleep(delay)` between each
-5. Each agent response: broadcast WebSocket `message` event → save to SQLite
-6. Moderator can inject a new comment at any time: injected into `session.state["moderator_input"]`, picked up by agents on next turn
-7. User can pause/resume via Settings or a UI control
+5. Each agent response: broadcast `{ type: "message", ... }` via WebSocket → save to SQLite
+6. Moderator injects a comment → FE calls `POST /api/conversations/inject { text }` → backend writes to `session.state["moderator_input"]`; the **first agent to run** in the next iteration reads it, includes it in their response, then the engine clears it from state so subsequent agents in that same cycle don't re-read it
+7. Pause/resume → FE calls `POST /api/conversations/pause` or `/resume`
 
 ---
 
