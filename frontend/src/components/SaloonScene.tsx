@@ -4,6 +4,7 @@ import { useSaloonStore } from '../store/saloonStore'
 import { AGENTS } from '../types'
 import Background from './Background'
 import Character from './Character'
+import MessageLog from './MessageLog'
 
 const CHAR_POSITIONS = [6, 18, 32, 50, 64, 78]
 
@@ -19,7 +20,7 @@ export default function SaloonScene() {
   }, [messages])
 
   return (
-    <div className="relative w-full" style={{ aspectRatio: '16/10', maxHeight: '70vh' }}>
+    <div className="relative w-full h-full">
       <Background />
 
       {AGENTS.map((agent, idx) => {
@@ -48,6 +49,7 @@ export default function SaloonScene() {
           </div>
         )
       })}
+      <MessageLog />
     </div>
   )
 }

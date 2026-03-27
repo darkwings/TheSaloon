@@ -41,13 +41,14 @@ export default function SpeechBubble({ text, color, onDismiss }: Props) {
     <div
       className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-20"
       style={{
+        width: '220px',
         opacity: visible ? 1 : 0,
         transition: 'opacity 0.3s',
         pointerEvents: 'none',
       }}
     >
       <div
-        className="relative px-3 py-2 rounded text-xs max-w-[180px] text-center"
+        className="relative px-3 py-2 rounded text-xs text-center"
         style={{
           background: 'rgba(5, 2, 0, 0.92)',
           border: `2px solid ${color}`,

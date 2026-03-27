@@ -5,6 +5,7 @@ export default function Background() {
       viewBox="0 0 800 500"
       className="absolute inset-0 w-full h-full"
       style={{ imageRendering: 'pixelated' }}
+      preserveAspectRatio="xMidYMid slice"
       xmlns="http://www.w3.org/2000/svg"
     >
       {/* Sky / back wall */}

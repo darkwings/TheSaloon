@@ -4,8 +4,9 @@ import { AGENTS } from '../types'
 
 const agentColorMap = Object.fromEntries(AGENTS.map(a => [a.id, a.color]))
 
+
 export default function MessageLog() {
-  const { messages, topic, status } = useSaloonStore()
+  const { messages } = useSaloonStore()
   const recent = messages.slice(-4)
 
   return (
@@ -14,18 +15,8 @@ export default function MessageLog() {
       style={{
         background: 'linear-gradient(0deg, rgba(5,2,0,0.95) 70%, transparent)',
         fontFamily: 'monospace',
-        minHeight: '90px',
       }}
     >
-      {topic && (
-        <div className="text-xs mb-2" style={{ color: '#f0c060' }}>
-          <span style={{ color: '#888' }}>Topic: </span>{topic}
-          <span className="ml-3" style={{ color: status === 'running' ? '#88ff88' : '#ff8844' }}>
-            ● {status}
-          </span>
-        </div>
-      )}
-
       <div className="space-y-1">
         {recent.map((msg) => (
           <div key={msg.id} className="text-xs leading-snug">

@@ -29,7 +29,7 @@ class Settings:
         return template
 
     async def get_delay(self) -> int:
-        val = await self.get("CONVERSATION_DELAY_SECONDS", default="20")
+        val = await self.get("CONVERSATION_DELAY_SECONDS", default="8")
         try:
             return int(val)
         except (TypeError, ValueError):
