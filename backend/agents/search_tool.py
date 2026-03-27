@@ -18,7 +18,7 @@ def make_search_tool(provider: str, api_key: str | None) -> Callable[[str], str]
                     return "No results found."
                 parts = []
                 for r in results:
-                    parts.append(f"**{r['title']}**\n{r['content']}\nSource: {r['url']}")
+                    parts.append(f"**{r.get('title', 'No title')}**\n{r.get('content', '')}\nSource: {r.get('url', '')}")
                 return "\n\n".join(parts)
             except Exception as e:
                 return f"Search error: {e}"
@@ -33,7 +33,7 @@ def make_search_tool(provider: str, api_key: str | None) -> Callable[[str], str]
                     return "No results found."
                 parts = []
                 for r in results:
-                    parts.append(f"**{r['title']}**\n{r['body']}\nSource: {r['href']}")
+                    parts.append(f"**{r.get('title', 'No title')}**\n{r.get('body', '')}\nSource: {r.get('href', '')}")
                 return "\n\n".join(parts)
             except Exception as e:
                 return f"Search error: {e}"

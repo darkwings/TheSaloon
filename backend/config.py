@@ -30,7 +30,10 @@ class Settings:
 
     async def get_delay(self) -> int:
         val = await self.get("CONVERSATION_DELAY_SECONDS", default="20")
-        return int(val)
+        try:
+            return int(val)
+        except (TypeError, ValueError):
+            return 20
 
     async def get_search_provider(self) -> str:
         return await self.get("SEARCH_PROVIDER", default="tavily")

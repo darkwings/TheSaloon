@@ -44,3 +44,11 @@ def test_search_handles_empty_results():
         result = tool("obscure query")
         assert isinstance(result, str)
         assert "No results" in result
+
+def test_search_handles_exception():
+    with patch("agents.search_tool.DDGS") as MockDDGS:
+        MockDDGS.return_value.__enter__.side_effect = Exception("connection timeout")
+        tool = make_search_tool(provider="duckduckgo", api_key=None)
+        result = tool("any query")
+        assert isinstance(result, str)
+        assert "Search error" in result
