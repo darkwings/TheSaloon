@@ -1,5 +1,6 @@
 // frontend/src/components/ModeratorInput.tsx
-import { useState, FormEvent } from 'react'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { useSaloonStore } from '../store/saloonStore'
 import * as api from '../api/client'
 
