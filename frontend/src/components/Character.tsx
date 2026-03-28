@@ -1,5 +1,6 @@
 // frontend/src/components/Character.tsx
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import type { AgentMeta, ChatMessage, AgentId } from '../types'
 import SpeechBubble from './SpeechBubble'
 
@@ -313,7 +314,10 @@ export default function Character({ agent, isTalking, isThinking, lastMessage, b
           </span>
         </div>
       </div>
-      {showProfile && <ProfileModal agent={agent} onClose={() => setShowProfile(false)} />}
+      {showProfile && createPortal(
+        <ProfileModal agent={agent} onClose={() => setShowProfile(false)} />,
+        document.body
+      )}
     </>
   )
 }
