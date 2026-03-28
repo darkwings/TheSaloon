@@ -195,23 +195,55 @@ function ProfileModal({ agent, onClose }: { agent: AgentMeta; onClose: () => voi
       onClick={onClose}
     >
       <div
-        className="p-6 rounded w-full mx-4"
-        style={{ background: '#0d0300', border: `2px solid ${agent.color}`, fontFamily: 'monospace', boxShadow: `0 0 24px ${agent.color}44`, maxWidth: '480px' }}
         onClick={(e) => e.stopPropagation()}
+        style={{
+          background: '#0d0300',
+          border: `2px solid ${agent.color}`,
+          boxShadow: `0 0 32px ${agent.color}55`,
+          fontFamily: 'monospace',
+          borderRadius: '6px',
+          width: '560px',
+          maxWidth: 'calc(100vw - 2rem)',
+          display: 'flex',
+          flexDirection: 'row',
+          overflow: 'hidden',
+        }}
       >
-        <div className="flex items-center gap-3 mb-3">
-          <div style={{ width: 10, height: 10, background: agent.color, borderRadius: 2 }} />
-          <h2 className="text-lg font-bold" style={{ color: agent.color }}>{agent.name}</h2>
-        </div>
-        <p className="text-xs mb-3 uppercase tracking-widest" style={{ color: '#5d3a00' }}>{agent.archetype}</p>
-        <p className="text-sm leading-relaxed" style={{ color: '#c8b898' }}>{agent.description}</p>
-        <button
-          className="mt-5 text-xs px-4 py-2 rounded font-bold"
-          style={{ background: agent.color, color: '#000', fontFamily: 'monospace' }}
-          onClick={onClose}
+        {/* Left: sprite + color band */}
+        <div
+          className="flex flex-col items-center justify-center px-6 py-6"
+          style={{ background: `${agent.color}18`, borderRight: `2px solid ${agent.color}44`, minWidth: '130px' }}
         >
-          Close
-        </button>
+          <CharacterSprite
+            agentId={agent.id}
+            color={agent.color}
+            isTalking={false}
+            isThinking={false}
+          />
+          <div
+            className="mt-3 text-center text-xs uppercase tracking-widest"
+            style={{ color: agent.color, opacity: 0.7 }}
+          >
+            {agent.archetype}
+          </div>
+        </div>
+
+        {/* Right: info */}
+        <div className="flex flex-col justify-between p-6 flex-1">
+          <div>
+            <h2 className="text-xl font-bold mb-3" style={{ color: agent.color }}>{agent.name}</h2>
+            <p className="text-sm leading-relaxed" style={{ color: '#c8b898', lineHeight: '1.7' }}>
+              {agent.description}
+            </p>
+          </div>
+          <button
+            className="mt-6 self-start text-xs px-4 py-2 rounded font-bold"
+            style={{ background: agent.color, color: '#000', fontFamily: 'monospace' }}
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   )
