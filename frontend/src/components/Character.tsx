@@ -1,5 +1,5 @@
 // frontend/src/components/Character.tsx
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import type { AgentMeta, ChatMessage } from '../types'
 import SpeechBubble from './SpeechBubble'
 
@@ -85,13 +85,15 @@ function ProfileModal({ agent, onClose }: { agent: AgentMeta; onClose: () => voi
 
 export default function Character({ agent, isTalking, isThinking, lastMessage, bubbleAlign = 'center' }: Props) {
   const [showProfile, setShowProfile] = useState(false)
-  const [bubble, setBubble] = useState<ChatMessage | null>(lastMessage)
+  const [bubble, setBubble] = useState<ChatMessage | null>(null)
+  // Remember the message ID present at mount — don't show bubbles for it on remount
+  const mountedIdRef = useRef<string | null>(lastMessage?.id ?? null)
 
   const dismiss = useCallback(() => setBubble(null), [])
 
-  // Sync bubble with lastMessage prop
   useEffect(() => {
-    if (lastMessage && bubble?.id !== lastMessage.id) {
+    if (lastMessage && lastMessage.id !== mountedIdRef.current) {
+      mountedIdRef.current = lastMessage.id
       setBubble(lastMessage)
     }
   }, [lastMessage])

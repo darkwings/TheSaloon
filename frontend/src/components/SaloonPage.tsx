@@ -1,5 +1,7 @@
 // frontend/src/components/SaloonPage.tsx
+import { useEffect, useRef } from 'react'
 import { useWebSocket } from '../hooks/useWebSocket'
+import { useTTS } from '../hooks/useTTS'
 import { useSaloonStore } from '../store/saloonStore'
 import SaloonScene from './SaloonScene'
 import MessageLog from './MessageLog'
@@ -11,7 +13,20 @@ interface Props {
 
 export default function SaloonPage({ onOpenSettings }: Props) {
   useWebSocket()
-  const { topic, status } = useSaloonStore()
+  const { topic, status, messages, ttsEnabled, toggleTTS } = useSaloonStore()
+  const { speak, stop } = useTTS(ttsEnabled)
+  const lastSpokenIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    const last = messages[messages.length - 1]
+    if (!last || last.id === lastSpokenIdRef.current) return
+    lastSpokenIdRef.current = last.id
+    speak(last.text, last.agentId)
+  }, [messages, speak])
+
+  useEffect(() => {
+    if (!ttsEnabled) stop()
+  }, [ttsEnabled, stop])
 
   return (
     <div className="flex flex-col" style={{ height: '100dvh', background: '#0d0500' }}>
@@ -39,6 +54,20 @@ export default function SaloonPage({ onOpenSettings }: Props) {
             ★ THE SALOON ★ — enter a topic to start the debate
           </span>
         )}
+        <button
+          onClick={toggleTTS}
+          title={ttsEnabled ? 'Mute voices' : 'Enable voices'}
+          className="shrink-0 px-2 py-1 rounded text-xs"
+          style={{
+            fontFamily: 'monospace',
+            background: ttsEnabled ? '#2a1a00' : 'transparent',
+            border: `1px solid ${ttsEnabled ? '#f0c060' : '#3d1e00'}`,
+            color: ttsEnabled ? '#f0c060' : '#555',
+            transition: 'all 0.15s',
+          }}
+        >
+          {ttsEnabled ? '🔊' : '🔇'}
+        </button>
       </div>
 
       {/* Main area: scene + message panel */}
