@@ -73,7 +73,7 @@ Moderator's latest input: {{moderator_input}}
 {SHARED_RULES}
 Respond as Comrade Karl Rosso.""",
     },
-    "marco_buonsenso": {
+    "charles_pemberton": {
         "name": "Charles Pemberton",
         "color": "#88cc88",
         "archetype": "The Center-Right",
