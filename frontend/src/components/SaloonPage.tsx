@@ -1,6 +1,6 @@
 // frontend/src/components/SaloonPage.tsx
 import { useEffect, useRef } from 'react'
-import { useWebSocket } from '../hooks/useWebSocket'
+import { useEventSource } from '../hooks/useEventSource'
 import { useTTS } from '../hooks/useTTS'
 import { useSaloonStore } from '../store/saloonStore'
 import SaloonScene from './SaloonScene'
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function SaloonPage({ onOpenSettings }: Props) {
-  useWebSocket()
+  useEventSource()
   const { topic, status, messages, ttsEnabled, toggleTTS } = useSaloonStore()
   const { speak, stop } = useTTS(ttsEnabled)
   const lastSpokenIdRef = useRef<string | null>(null)

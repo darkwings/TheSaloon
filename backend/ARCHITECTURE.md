@@ -173,29 +173,54 @@ The `settings` table uses `INSERT ... ON CONFLICT(key) DO UPDATE SET value = exc
 
 ---
 
-## WebSocket: server → client only
+## SSE: server → client event stream
+
+The frontend never sends commands over the event channel — it uses REST for that. The `/events` endpoint is a pure server-push stream implemented with SSE (`text/event-stream`), which is the correct tool for strictly unidirectional communication over HTTP.
+
+Each connected client gets its own `asyncio.Queue`. `broadcast()` puts the serialized event into every queue:
 
 ```python
-@app.websocket("/ws")
-async def websocket_endpoint(ws: WebSocket):
-    await ws.accept()
-    ws_clients.append(ws)
-    try:
-        while True:
-            await ws.receive_text()   # just keeps the connection alive
-    except WebSocketDisconnect:
-        ws_clients.remove(ws)
+sse_queues: list[asyncio.Queue] = []
+
+async def broadcast(event: dict):
+    data = json.dumps(event)
+    for q in sse_queues:
+        try: q.put_nowait(data)
+        except asyncio.QueueFull: ...  # remove dead client
 ```
 
-The frontend never sends commands over WebSocket — it uses REST for that. The WebSocket is a pure event stream. `broadcast()` iterates `ws_clients`, catches send failures, and removes dead connections:
+The SSE handler reads from the queue with a 15-second timeout. On timeout it sends an SSE comment (`: keepalive`) to prevent proxies and browsers from closing the connection:
 
 ```python
-async def broadcast(event: dict):
-    dead = []
-    for ws in ws_clients:
-        try: await ws.send_text(json.dumps(event))
-        except: dead.append(ws)
-    for ws in dead: ws_clients.remove(ws)
+@app.get("/events")
+async def sse_endpoint(request: Request):
+    queue = asyncio.Queue(maxsize=100)
+    sse_queues.append(queue)
+
+    async def event_stream():
+        try:
+            while True:
+                if await request.is_disconnected(): break
+                try:
+                    data = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    yield f"data: {data}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        finally:
+            sse_queues.remove(queue)
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+```
+
+`X-Accel-Buffering: no` disables Nginx response buffering (relevant when running behind a reverse proxy).
+
+On the frontend, `useEventSource` uses the browser's native `EventSource` API. On error it closes the connection and schedules a manual reconnect after 3 seconds:
+
+```typescript
+const es = new EventSource(`http://${window.location.hostname}:8000/events`)
+es.onmessage = (e) => { /* same dispatch logic as before */ }
+es.onerror = () => { es.close(); setTimeout(connect, 3000) }
 ```
 
 Four event types flow over this channel:
@@ -208,6 +233,8 @@ Four event types flow over this channel:
 | `topic_set` | topic, conversation_id | Conversation started |
 
 `agent_thinking` with `agent: null` signals the engine skipped a turn (`[SKIP]` response or error) — the frontend clears the thinking spinner.
+
+**Why SSE over WebSocket:** the communication is strictly unidirectional (server → client). WebSocket is designed for bidirectional streams; using it here required a dummy `receive_text()` loop just to keep the connection alive. SSE is the correct HTTP primitive for this pattern — simpler server code, no protocol upgrade, works transparently through proxies, and the browser handles reconnection natively.
 
 ---
 
@@ -258,5 +285,5 @@ The search tool is a plain Python function `web_search(query: str) -> str`. ADK 
 | Moderator input cleared before `await` | Prevents race condition between `inject()` and the loop consuming the value |
 | Agents rebuilt on every `/start` | Settings changes take effect immediately without restarting the server |
 | DB overrides `.env` for settings | `.env` = install config; SQLite = runtime config. Clear separation. |
-| WebSocket server→client only | Simpler: no need to parse incoming WS messages; REST is the right protocol for commands |
+| SSE instead of WebSocket | Communication is strictly server→client; SSE is the correct HTTP primitive — no upgrade handshake, works through proxies, browser reconnects natively |
 | `asyncio.Event` for pause | Zero-CPU blocking; no polling or sleep loops |

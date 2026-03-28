@@ -4,9 +4,9 @@ import asyncio
 import os
 import re
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from database import Database
@@ -19,18 +19,19 @@ from agents.search_tool import make_search_tool
 db: Database = None
 settings: Settings = None
 engine: ConversationEngine = None
-ws_clients: list[WebSocket] = []
+sse_queues: list[asyncio.Queue] = []
 
-# ── WebSocket broadcast (defined before lifespan so engine can use it) ────────
+# ── SSE broadcast (defined before lifespan so engine can use it) ──────────────
 async def broadcast(event: dict):
+    data = json.dumps(event)
     dead = []
-    for ws in ws_clients:
+    for q in sse_queues:
         try:
-            await ws.send_text(json.dumps(event))
-        except Exception:
-            dead.append(ws)
-    for ws in dead:
-        ws_clients.remove(ws)
+            q.put_nowait(data)
+        except asyncio.QueueFull:
+            dead.append(q)
+    for q in dead:
+        sse_queues.remove(q)
 
 # ── Startup / Shutdown ────────────────────────────────────────────────────────
 @asynccontextmanager
@@ -69,17 +70,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── WebSocket ─────────────────────────────────────────────────────────────────
-@app.websocket("/ws")
-async def websocket_endpoint(ws: WebSocket):
-    await ws.accept()
-    ws_clients.append(ws)
-    try:
-        while True:
-            await ws.receive_text()  # keep alive; FE doesn't send via WS
-    except WebSocketDisconnect:
-        if ws in ws_clients:
-            ws_clients.remove(ws)
+# ── SSE ───────────────────────────────────────────────────────────────────────
+@app.get("/events")
+async def sse_endpoint(request: Request):
+    queue: asyncio.Queue = asyncio.Queue(maxsize=100)
+    sse_queues.append(queue)
+
+    async def event_stream():
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    data = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    yield f"data: {data}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"  # SSE comment, keeps connection alive
+        finally:
+            if queue in sse_queues:
+                sse_queues.remove(queue)
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 # ── REST API ──────────────────────────────────────────────────────────────────
 @app.get("/api/health")
