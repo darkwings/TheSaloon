@@ -9,16 +9,33 @@ const agentNameMap = Object.fromEntries(AGENTS.map(a => [a.id, a.name]))
 
 interface Props { onBack: () => void }
 
-function ConversationDetail({ conv, onBack }: { conv: Conversation; onBack: () => void }) {
+function ConversationDetail({ conv, onBack, onDelete }: { conv: Conversation; onBack: () => void; onDelete: () => void }) {
   const [messages, setMessages] = useState<any[]>([])
 
   useEffect(() => {
     api.getConversation(conv.id).then((r) => setMessages(r.messages))
   }, [conv.id])
 
+  async function handleDelete() {
+    if (!confirm('Delete this conversation?')) return
+    await api.deleteConversation(conv.id)
+    onDelete()
+  }
+
   return (
     <div className="flex flex-col h-full">
-      <button onClick={onBack} className="text-xs mb-4 self-start" style={{ color: '#f0c060' }}>← Back to history</button>
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={onBack} className="text-xs" style={{ color: '#f0c060' }}>← Back to history</button>
+        <button
+          onClick={handleDelete}
+          className="text-xs px-3 py-1 rounded"
+          style={{ background: '#3a0000', color: '#ff6644', border: '1px solid #ff664444', fontFamily: 'monospace' }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = '#ff6644')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = '#ff664444')}
+        >
+          ✕ Delete
+        </button>
+      </div>
       <h3 className="font-bold mb-1" style={{ color: '#f0c060', fontFamily: 'monospace' }}>{conv.title}</h3>
       <p className="text-xs mb-4" style={{ color: '#888', fontFamily: 'monospace' }}>
         {new Date(conv.created_at).toLocaleString()} · {conv.llm_provider}
@@ -42,9 +59,23 @@ function HistorySection() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selected, setSelected] = useState<Conversation | null>(null)
 
-  useEffect(() => { api.listConversations().then(setConversations) }, [])
+  function load() { api.listConversations().then(setConversations) }
+  useEffect(() => { load() }, [])
 
-  if (selected) return <ConversationDetail conv={selected} onBack={() => setSelected(null)} />
+  async function handleDelete(e: React.MouseEvent, id: number) {
+    e.stopPropagation()
+    if (!confirm('Delete this conversation?')) return
+    await api.deleteConversation(id)
+    load()
+  }
+
+  if (selected) return (
+    <ConversationDetail
+      conv={selected}
+      onBack={() => setSelected(null)}
+      onDelete={() => { setSelected(null); load() }}
+    />
+  )
 
   return (
     <div className="flex flex-col h-full">
@@ -53,19 +84,31 @@ function HistorySection() {
       )}
       <div className="flex-1 overflow-y-auto space-y-2 pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#3d1e00 #080200' }}>
         {conversations.map((c) => (
-          <button
+          <div
             key={c.id}
-            onClick={() => setSelected(c)}
-            className="w-full text-left px-4 py-3 rounded"
-            style={{ background: '#110500', border: '1px solid #3d1e00', transition: 'border-color 0.15s' }}
+            className="flex items-center gap-2 px-4 py-3 rounded"
+            style={{ background: '#110500', border: '1px solid #3d1e00', transition: 'border-color 0.15s', cursor: 'pointer' }}
             onMouseEnter={e => (e.currentTarget.style.borderColor = '#f0c060')}
             onMouseLeave={e => (e.currentTarget.style.borderColor = '#3d1e00')}
+            onClick={() => setSelected(c)}
           >
-            <div className="text-sm font-bold mb-1" style={{ color: '#e8d8b0', fontFamily: 'monospace' }}>{c.title}</div>
-            <div className="text-xs" style={{ color: '#666', fontFamily: 'monospace' }}>
-              {new Date(c.created_at).toLocaleDateString()} · {c.llm_provider}
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold mb-1 truncate" style={{ color: '#e8d8b0', fontFamily: 'monospace' }}>{c.title}</div>
+              <div className="text-xs" style={{ color: '#666', fontFamily: 'monospace' }}>
+                {new Date(c.created_at).toLocaleDateString()} · {c.llm_provider}
+              </div>
             </div>
-          </button>
+            <button
+              onClick={(e) => handleDelete(e, c.id)}
+              className="shrink-0 text-xs px-2 py-1 rounded"
+              style={{ background: 'transparent', color: '#555', border: '1px solid transparent', fontFamily: 'monospace' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#ff6644'; e.currentTarget.style.borderColor = '#ff664466' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#555'; e.currentTarget.style.borderColor = 'transparent' }}
+              title="Delete conversation"
+            >
+              ✕
+            </button>
+          </div>
         ))}
       </div>
     </div>

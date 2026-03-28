@@ -42,6 +42,10 @@ export async function getConversation(id: number): Promise<{ conversation: Conve
   return res.json()
 }
 
+export async function deleteConversation(id: number): Promise<void> {
+  await fetch(`${BASE}/conversations/${id}`, { method: 'DELETE' })
+}
+
 export async function getSettings(): Promise<AppSettings> {
   const res = await fetch(`${BASE}/settings`)
   return res.json()

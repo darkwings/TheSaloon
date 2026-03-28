@@ -94,6 +94,12 @@ class Database:
             rows = await cursor.fetchall()
             return [dict(r) for r in rows]
 
+    async def delete_conversation(self, conv_id: int):
+        self._check_conn()
+        await self._conn.execute("DELETE FROM messages WHERE conversation_id = ?", (conv_id,))
+        await self._conn.execute("DELETE FROM conversations WHERE id = ?", (conv_id,))
+        await self._conn.commit()
+
     async def get_setting(self, key: str, default: Any = None) -> Any:
         self._check_conn()
         async with self._conn.execute(

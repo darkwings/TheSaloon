@@ -133,6 +133,14 @@ async def inject_message(req: InjectRequest):
 async def list_conversations():
     return await db.list_conversations()
 
+@app.delete("/api/conversations/{conv_id}")
+async def delete_conversation(conv_id: int):
+    conv = await db.get_conversation(conv_id)
+    if not conv:
+        return JSONResponse(status_code=404, content={"error": "not found"})
+    await db.delete_conversation(conv_id)
+    return {"status": "deleted"}
+
 @app.get("/api/conversations/{conv_id}")
 async def get_conversation(conv_id: int):
     conv = await db.get_conversation(conv_id)
