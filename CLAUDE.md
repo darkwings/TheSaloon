@@ -114,12 +114,13 @@ Agents respond in the moderator's language (follow-the-moderator language rule i
 - Moderator input (`inject()`) is consumed by the **first agent** of the next cycle, then immediately cleared (cleared synchronously before any `await` to avoid race conditions)
 - Failed agent calls are silently skipped (no error bubbles in the UI)
 - Pause/resume: `asyncio.Event` — `clear()` to pause, `set()` to resume
+- **[SKIP] mechanic**: Agents can reply `[SKIP]` when they have nothing relevant to add. The engine detects this, clears the `agent_thinking` indicator, skips the delay, and moves on. This makes the debate feel more natural — not every agent speaks every round. Moderator input always suppresses skip.
 
 ## WebSocket events (server → client)
 
 ```json
 { "type": "message",       "agent": "bobby_ray", "agent_name": "Bobby Ray Buster", "text": "...", "timestamp": "..." }
-{ "type": "agent_thinking","agent": "zoe_futura" }
+{ "type": "agent_thinking","agent": "zoe_futura" }   // agent: null clears the thinking indicator (skip/error)
 { "type": "status",        "value": "running" | "paused" | "stopped" }
 { "type": "topic_set",     "topic": "...", "conversation_id": 42 }
 ```
@@ -128,6 +129,7 @@ Agents respond in the moderator's language (follow-the-moderator language rule i
 
 ```
 POST /api/conversations/start    { topic }  → { conversation_id }
+POST /api/conversations/stop
 POST /api/conversations/pause
 POST /api/conversations/resume
 POST /api/conversations/inject   { text }
@@ -146,3 +148,5 @@ WS   /ws                         → real-time event stream
 - **Moderator input cleared synchronously**: The `_moderator_input` field is cleared immediately when captured at cycle start (before any `await`) to prevent concurrent `inject()` calls from losing messages.
 - **Settings key validation**: `PUT /api/settings` validates key against `^[A-Za-z][A-Za-z0-9_]*$` to prevent arbitrary key injection.
 - **Version pins relaxed**: `fastapi`, `uvicorn`, `litellm`, `anthropic`, `httpx` use `>=` bounds in `requirements.txt` because `google-adk==1.4.2` requires `starlette>=0.46.2`, incompatible with fastapi `0.115.0`'s starlette requirement.
+- **LangGraph considered and rejected (for now)**: LangGraph would enable dynamic turn-taking (agents choosing who speaks next). Rejected in favour of the simpler `[SKIP]` mechanic — same effect, no new dependency. Revisit if routing needs become more complex (e.g. agent-to-agent addressing, branching debates).
+- **Ollama tool-calling disabled**: Local models (ollama/*) hallucinate tool call names not in the schema. Tools are disabled entirely for Ollama providers. Claude/Gemini keep web search.

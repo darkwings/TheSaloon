@@ -137,9 +137,11 @@ class ConversationEngine:
                     )
                 except Exception as e:
                     print(f"[engine] agent {agent.name} error: {e}", flush=True)
+                    await self._broadcast({"type": "agent_thinking", "agent": None})
                     continue
 
-                if not text:
+                if not text or text.startswith("[SKIP]"):
+                    await self._broadcast({"type": "agent_thinking", "agent": None})
                     continue
 
                 persona = AGENT_PERSONAS.get(agent.name, {})

@@ -31,7 +31,7 @@ export function useWebSocket() {
               }
               break
             case 'agent_thinking':
-              if (event.agent) setThinkingAgent(event.agent)
+              setThinkingAgent(event.agent ?? null)
               break
             case 'status':
               if (event.value) setStatus(event.value)
