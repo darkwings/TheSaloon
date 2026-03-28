@@ -2,6 +2,7 @@
 import { useWebSocket } from '../hooks/useWebSocket'
 import { useSaloonStore } from '../store/saloonStore'
 import SaloonScene from './SaloonScene'
+import MessageLog from './MessageLog'
 import ModeratorInput from './ModeratorInput'
 
 interface Props {
@@ -13,8 +14,8 @@ export default function SaloonPage({ onOpenSettings }: Props) {
   const { topic, status } = useSaloonStore()
 
   return (
-    <div className="flex flex-col h-screen" style={{ background: '#0d0500', borderBottom: '3px solid #3d1e00' }}>
-      {/* Top bar: topic + status */}
+    <div className="flex flex-col" style={{ height: '100dvh', background: '#0d0500' }}>
+      {/* Top bar */}
       <div
         className="flex items-center gap-3 px-4 py-2 shrink-0 z-30"
         style={{ borderBottom: '2px solid #3d1e00', background: '#0d0500' }}
@@ -40,11 +41,41 @@ export default function SaloonPage({ onOpenSettings }: Props) {
         )}
       </div>
 
-      {/* Scene fills remaining space */}
-      <div className="flex-1 min-h-0 relative">
-        <SaloonScene />
+      {/* Main area: scene + message panel */}
+      <div className="flex flex-1 min-h-0">
+        {/* Saloon scene */}
+        <div className="flex-1 min-w-0 relative">
+          <SaloonScene />
+        </div>
+
+        {/* Message log panel */}
+        <div
+          className="shrink-0 flex flex-col"
+          style={{
+            width: '320px',
+            borderLeft: '2px solid #3d1e00',
+            background: '#080200',
+          }}
+        >
+          {/* Panel header */}
+          <div
+            className="shrink-0 px-3 py-2 text-center"
+            style={{
+              borderBottom: '1px solid #3d1e00',
+              background: '#0d0500',
+              fontFamily: 'monospace',
+              fontSize: '10px',
+              color: '#5d3a00',
+              letterSpacing: '0.15em',
+            }}
+          >
+            ══ DISPATCH ══
+          </div>
+          <MessageLog />
+        </div>
       </div>
 
+      {/* Moderator input */}
       <ModeratorInput onOpenSettings={onOpenSettings} />
     </div>
   )

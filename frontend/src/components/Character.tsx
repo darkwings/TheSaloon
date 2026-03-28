@@ -8,6 +8,7 @@ interface Props {
   isTalking: boolean
   isThinking: boolean
   lastMessage: ChatMessage | null
+  bubbleAlign?: 'left' | 'center' | 'right'
 }
 
 function CharacterSprite({ color, isTalking, isThinking }: { color: string; isTalking: boolean; isThinking: boolean }) {
@@ -82,7 +83,7 @@ function ProfileModal({ agent, onClose }: { agent: AgentMeta; onClose: () => voi
   )
 }
 
-export default function Character({ agent, isTalking, isThinking, lastMessage }: Props) {
+export default function Character({ agent, isTalking, isThinking, lastMessage, bubbleAlign = 'center' }: Props) {
   const [showProfile, setShowProfile] = useState(false)
   const [bubble, setBubble] = useState<ChatMessage | null>(lastMessage)
 
@@ -106,6 +107,7 @@ export default function Character({ agent, isTalking, isThinking, lastMessage }:
           <SpeechBubble
             text={bubble.text}
             color={agent.color}
+            align={bubbleAlign}
             onDismiss={dismiss}
           />
         )}

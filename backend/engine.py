@@ -30,6 +30,9 @@ class ConversationEngine:
         self._moderator_input: str = ""
         self._conversation_id: int | None = None
 
+    def update_agents(self, agents: list[LlmAgent]):
+        self._agents = agents
+
     async def start(self, topic: str, llm_provider: str) -> int:
         self._topic = topic
         self._history = []
@@ -133,6 +136,7 @@ class ConversationEngine:
                         moderator_input=current_moderator,
                     )
                 except Exception as e:
+                    print(f"[engine] agent {agent.name} error: {e}", flush=True)
                     continue
 
                 if not text:

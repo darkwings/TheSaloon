@@ -44,7 +44,8 @@ async def lifespan(app: FastAPI):
     search_provider = await settings.get_search_provider()
     api_key = await settings.get("TAVILY_API_KEY") if search_provider == "tavily" else None
     search_tool = make_search_tool(provider=search_provider, api_key=api_key)
-    agents = build_agents(model_string=model_string, search_tool=search_tool)
+    ollama_base_url = await settings.get("OLLAMA_BASE_URL", default="http://localhost:11434")
+    agents = build_agents(model_string=model_string, search_tool=search_tool, ollama_base_url=ollama_base_url)
     delay = await settings.get_delay()
 
     engine = ConversationEngine(
@@ -89,6 +90,13 @@ class StartRequest(BaseModel):
 @app.post("/api/conversations/start")
 async def start_conversation(req: StartRequest):
     llm_provider = await settings.get("LLM_PROVIDER", default="claude")
+    # Rebuild agents from current settings so provider changes don't need a restart
+    model_string = await settings.get_model_string()
+    search_provider = await settings.get_search_provider()
+    api_key = await settings.get("TAVILY_API_KEY") if search_provider == "tavily" else None
+    search_tool = make_search_tool(provider=search_provider, api_key=api_key)
+    ollama_base_url = await settings.get("OLLAMA_BASE_URL", default="http://localhost:11434")
+    engine.update_agents(build_agents(model_string=model_string, search_tool=search_tool, ollama_base_url=ollama_base_url))
     conv_id = await engine.start(topic=req.topic, llm_provider=llm_provider)
     return {"conversation_id": conv_id}
 

@@ -4,7 +4,6 @@ import { useSaloonStore } from '../store/saloonStore'
 import { AGENTS } from '../types'
 import Background from './Background'
 import Character from './Character'
-import MessageLog from './MessageLog'
 
 const CHAR_POSITIONS = [6, 18, 32, 50, 64, 78]
 
@@ -29,6 +28,8 @@ export default function SaloonScene() {
         const isThinking = thinkingAgent === agent.id
         const lastMsg = lastMessagePerAgent.get(agent.id) ?? null
 
+        const bubbleAlign = idx === 0 ? 'left' : idx === AGENTS.length - 1 ? 'right' : 'center'
+
         return (
           <div
             key={agent.id}
@@ -45,11 +46,11 @@ export default function SaloonScene() {
               isTalking={isTalking}
               isThinking={isThinking}
               lastMessage={lastMsg}
+              bubbleAlign={bubbleAlign}
             />
           </div>
         )
       })}
-      <MessageLog />
     </div>
   )
 }

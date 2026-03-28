@@ -22,10 +22,10 @@ export const useSaloonStore = create<SaloonState>((set) => ({
   topic: null,
 
   addMessage: (msg) =>
-    set((state) => ({
-      messages: [...state.messages, msg],
-      thinkingAgent: null,
-    })),
+    set((state) => {
+      if (state.messages.some((m) => m.id === msg.id)) return state
+      return { messages: [...state.messages, msg], thinkingAgent: null }
+    }),
 
   setStatus: (status) => set({ status }),
 

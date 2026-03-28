@@ -1,33 +1,72 @@
 // frontend/src/components/MessageLog.tsx
+import { useEffect, useRef } from 'react'
 import { useSaloonStore } from '../store/saloonStore'
 import { AGENTS } from '../types'
 
 const agentColorMap = Object.fromEntries(AGENTS.map(a => [a.id, a.color]))
 
-
 export default function MessageLog() {
-  const { messages } = useSaloonStore()
-  const recent = messages.slice(-4)
+  const { messages, status } = useSaloonStore()
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  if (messages.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center" style={{ fontFamily: 'monospace' }}>
+        {status === 'idle' || status === 'stopped' ? (
+          <span style={{ color: '#3d1e00', fontSize: '11px', textAlign: 'center', padding: '1rem' }}>
+            No debate yet.<br />Enter a topic below.
+          </span>
+        ) : (
+          <span style={{ color: '#5d3a00', fontSize: '11px' }}>Waiting for agents…</span>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div
-      className="absolute bottom-0 left-0 right-0 px-4 py-3 z-20"
+      className="flex-1 overflow-y-auto"
       style={{
-        background: 'linear-gradient(0deg, rgba(5,2,0,0.95) 70%, transparent)',
-        fontFamily: 'monospace',
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#3d1e00 #080200',
       }}
     >
-      <div className="space-y-1">
-        {recent.map((msg) => (
-          <div key={msg.id} className="text-xs leading-snug">
-            <span style={{ color: agentColorMap[msg.agentId] ?? '#f0c060', fontWeight: 'bold' }}>
-              {msg.agentName}:
-            </span>{' '}
-            <span style={{ color: '#c8b898' }}>
-              {msg.text.length > 120 ? msg.text.slice(0, 120) + '…' : msg.text}
-            </span>
-          </div>
-        ))}
+      <div className="flex flex-col gap-3 p-3">
+        {messages.map((msg) => {
+          const color = agentColorMap[msg.agentId] ?? '#f0c060'
+          return (
+            <div
+              key={msg.id}
+              style={{
+                borderLeft: `2px solid ${color}`,
+                paddingLeft: '8px',
+              }}
+            >
+              <div
+                className="text-xs font-bold mb-1"
+                style={{ color, fontFamily: 'monospace' }}
+              >
+                {msg.agentName}
+              </div>
+              <div
+                className="text-xs leading-relaxed"
+                style={{
+                  color: '#c8b898',
+                  fontFamily: 'monospace',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {msg.text}
+              </div>
+            </div>
+          )
+        })}
+        <div ref={bottomRef} />
       </div>
     </div>
   )

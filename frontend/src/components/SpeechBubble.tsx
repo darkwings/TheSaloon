@@ -4,42 +4,50 @@ import { useEffect, useState } from 'react'
 interface Props {
   text: string
   color: string
+  align?: 'left' | 'center' | 'right'
   onDismiss: () => void
 }
 
-export default function SpeechBubble({ text, color, onDismiss }: Props) {
+export default function SpeechBubble({ text, color, align = 'center', onDismiss }: Props) {
   const [displayed, setDisplayed] = useState('')
   const [visible, setVisible] = useState(true)
 
-  // Typewriter effect
+  // Typewriter effect — then dismiss 4s after completion
   useEffect(() => {
     setDisplayed('')
     setVisible(true)
     let i = 0
+    let dismissTimer: ReturnType<typeof setTimeout>
+    let fadeTimer: ReturnType<typeof setTimeout>
+
     const interval = setInterval(() => {
       i++
       setDisplayed(text.slice(0, i))
-      if (i >= text.length) clearInterval(interval)
+      if (i >= text.length) {
+        clearInterval(interval)
+        // Start dismiss timer only after typewriting is done
+        dismissTimer = setTimeout(() => {
+          setVisible(false)
+          fadeTimer = setTimeout(onDismiss, 300)
+        }, 4000)
+      }
     }, 20)
-    return () => clearInterval(interval)
-  }, [text])
 
-  // Auto-dismiss after 5 seconds
-  useEffect(() => {
-    let fadeTimer: ReturnType<typeof setTimeout>
-    const timeout = setTimeout(() => {
-      setVisible(false)
-      fadeTimer = setTimeout(onDismiss, 300)
-    }, 5000)
     return () => {
-      clearTimeout(timeout)
+      clearInterval(interval)
+      clearTimeout(dismissTimer)
       clearTimeout(fadeTimer)
     }
   }, [text, onDismiss])
 
+  const alignClass =
+    align === 'left' ? 'left-0' :
+    align === 'right' ? 'right-0' :
+    'left-1/2 -translate-x-1/2'
+
   return (
     <div
-      className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-20"
+      className={`absolute bottom-full mb-2 z-20 ${alignClass}`}
       style={{
         width: '220px',
         opacity: visible ? 1 : 0,

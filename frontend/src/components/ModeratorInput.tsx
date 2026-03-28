@@ -37,7 +37,7 @@ export default function ModeratorInput({ onOpenSettings }: Props) {
   }
 
   return (
-    <div className="relative z-30 shrink-0 px-8 pt-3 pb-8" style={{ background: '#0d0500' }}>
+    <div className="relative z-30 shrink-0 px-8 pt-3" style={{ background: '#0d0500', paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))' }}>
       <div className="px-4 py-3 rounded" style={{ border: '2px solid #3d1e00', background: '#0a0300' }}>
         <form onSubmit={handleSubmit} className="flex gap-2 items-center">
           <input
