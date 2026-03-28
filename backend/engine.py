@@ -173,7 +173,7 @@ class ConversationEngine:
                     await self._broadcast({"type": "agent_thinking", "agent": None})
                     continue
 
-                if not text or "[skip]" in text.lower().strip()[:20]:
+                if not text or "[skip]" in text.lower():
                     await self._broadcast({"type": "agent_thinking", "agent": None})
                     continue
 
