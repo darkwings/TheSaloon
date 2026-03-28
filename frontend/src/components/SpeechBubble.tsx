@@ -18,7 +18,7 @@ export default function SpeechBubble({ text, color, align = 'center', onDismiss 
       setVisible(false)
       const fadeTimer = setTimeout(onDismiss, 300)
       return () => clearTimeout(fadeTimer)
-    }, 5000)
+    }, 8000)
     return () => clearTimeout(dismissTimer)
   }, [text, onDismiss])
 
