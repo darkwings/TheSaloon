@@ -12,6 +12,10 @@ export async function startConversation(topic: string): Promise<{ conversation_i
   return res.json()
 }
 
+export async function stopConversation(): Promise<void> {
+  await fetch(`${BASE}/conversations/stop`, { method: 'POST' })
+}
+
 export async function pauseConversation(): Promise<void> {
   await fetch(`${BASE}/conversations/pause`, { method: 'POST' })
 }

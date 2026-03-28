@@ -69,19 +69,35 @@ export default function ModeratorInput({ onOpenSettings }: Props) {
           </button>
 
           {(status === 'running' || status === 'paused') && (
-            <button
-              type="button"
-              onClick={handlePauseResume}
-              className="px-3 py-2 rounded text-sm"
-              style={{
-                background: status === 'running' ? '#442200' : '#224400',
-                border: '1px solid #f0c060',
-                color: '#f0c060',
-                fontFamily: 'monospace',
-              }}
-            >
-              {status === 'running' ? '⏸' : '▶'}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={handlePauseResume}
+                className="px-3 py-2 rounded text-sm"
+                style={{
+                  background: status === 'running' ? '#442200' : '#224400',
+                  border: '1px solid #f0c060',
+                  color: '#f0c060',
+                  fontFamily: 'monospace',
+                }}
+              >
+                {status === 'running' ? '⏸' : '▶'}
+              </button>
+              <button
+                type="button"
+                onClick={api.stopConversation}
+                className="px-3 py-2 rounded text-sm"
+                title="Stop conversation"
+                style={{
+                  background: '#3a0000',
+                  border: '1px solid #aa3333',
+                  color: '#ff6666',
+                  fontFamily: 'monospace',
+                }}
+              >
+                ■
+              </button>
+            </>
           )}
 
           <button

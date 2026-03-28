@@ -56,13 +56,14 @@ export default function SpeechBubble({ text, color, align = 'center', onDismiss 
       }}
     >
       <div
-        className="relative px-3 py-2 rounded text-xs text-center"
+        className="relative px-3 py-2 rounded text-center"
         style={{
+          fontSize: '13px',
           background: 'rgba(5, 2, 0, 0.92)',
           border: `2px solid ${color}`,
           color: '#e8d8b0',
           fontFamily: 'monospace',
-          lineHeight: '1.4',
+          lineHeight: '1.5',
           boxShadow: `0 0 8px ${color}40`,
           wordBreak: 'break-word',
         }}

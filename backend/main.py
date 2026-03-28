@@ -100,6 +100,11 @@ async def start_conversation(req: StartRequest):
     conv_id = await engine.start(topic=req.topic, llm_provider=llm_provider)
     return {"conversation_id": conv_id}
 
+@app.post("/api/conversations/stop")
+async def stop_conversation():
+    await engine.stop()
+    return {"status": "stopped"}
+
 @app.post("/api/conversations/pause")
 async def pause_conversation():
     await engine.pause()

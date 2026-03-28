@@ -47,14 +47,15 @@ export default function MessageLog() {
               }}
             >
               <div
-                className="text-xs font-bold mb-1"
-                style={{ color, fontFamily: 'monospace' }}
+                className="font-bold mb-1"
+                style={{ color, fontFamily: 'monospace', fontSize: '13px' }}
               >
                 {msg.agentName}
               </div>
               <div
-                className="text-xs leading-relaxed"
+                className="leading-relaxed"
                 style={{
+                  fontSize: '13px',
                   color: '#c8b898',
                   fontFamily: 'monospace',
                   whiteSpace: 'pre-wrap',
