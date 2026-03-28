@@ -303,11 +303,12 @@ export default function Character({ agent, isTalking, isThinking, lastMessage, b
           <span
             className="text-center"
             style={{
-              color: '#3d1e00',
+              color: '#886644',
               fontFamily: 'monospace',
               fontSize: '9px',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
+              textShadow: '1px 1px 0 #000',
             }}
           >
             {agent.archetype}
