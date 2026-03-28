@@ -195,8 +195,8 @@ function ProfileModal({ agent, onClose }: { agent: AgentMeta; onClose: () => voi
       onClick={onClose}
     >
       <div
-        className="p-6 rounded max-w-sm w-full mx-4"
-        style={{ background: '#0d0300', border: `2px solid ${agent.color}`, fontFamily: 'monospace', boxShadow: `0 0 24px ${agent.color}44` }}
+        className="p-6 rounded w-full mx-4"
+        style={{ background: '#0d0300', border: `2px solid ${agent.color}`, fontFamily: 'monospace', boxShadow: `0 0 24px ${agent.color}44`, maxWidth: '480px' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 mb-3">
