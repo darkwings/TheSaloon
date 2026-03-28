@@ -7,12 +7,14 @@ interface SaloonState {
   status: EngineStatus
   thinkingAgent: AgentId | null
   topic: string | null
+  ttsEnabled: boolean
 
   addMessage: (msg: ChatMessage) => void
   setStatus: (status: EngineStatus) => void
   setThinkingAgent: (agent: AgentId | null) => void
   setTopic: (topic: string) => void
   clearMessages: () => void
+  toggleTTS: () => void
 }
 
 export const useSaloonStore = create<SaloonState>((set) => ({
@@ -20,6 +22,7 @@ export const useSaloonStore = create<SaloonState>((set) => ({
   status: 'idle',
   thinkingAgent: null,
   topic: null,
+  ttsEnabled: false,
 
   addMessage: (msg) =>
     set((state) => {
@@ -34,4 +37,5 @@ export const useSaloonStore = create<SaloonState>((set) => ({
   setTopic: (topic) => set({ topic, messages: [], status: 'running' }),
 
   clearMessages: () => set({ messages: [] }),
+  toggleTTS: () => set((state) => ({ ttsEnabled: !state.ttsEnabled })),
 }))
