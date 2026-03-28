@@ -20,7 +20,7 @@ export const AGENTS: AgentMeta[] = [
   { id: 'prof_quark',      name: 'Prof. Isacco Quark', color: '#88aaff', archetype: 'The Scientist',    description: 'Rational, evidence-based. Cites sources, corrects others gently with data.' },
   { id: 'bobby_ray',       name: 'Bobby Ray Buster',   color: '#ff6644', archetype: 'The Redneck',      description: 'Ultra-right American. Beer, BBQ, anti-establishment. 🍺' },
   { id: 'karl_rosso',      name: 'Comrade Karl Rosso', color: '#ff4444', archetype: 'The Communist',    description: 'Every topic leads back to capitalism as the root cause.' },
-  { id: 'marco_buonsenso', name: 'Marco Buonsenso',    color: '#88cc88', archetype: 'The Center-Right', description: 'Moderate conservative. Seeks compromise, dislikes extremism.' },
+  { id: 'marco_buonsenso', name: 'Charles Pemberton',  color: '#88cc88', archetype: 'The Center-Right', description: 'Moderate conservative. Seeks compromise, dislikes extremism.' },
   { id: 'gigi_bellavita',  name: 'Gigi Bellavita',     color: '#ffcc44', archetype: 'The Simple One',   description: 'Hedonistic and distracted. Only cares about food, friends, and fun.' },
   { id: 'zoe_futura',      name: 'Zoe Futura',         color: '#ff88cc', archetype: 'The Young Idealist', description: "Angry, well-educated. Wants to change the world before it's too late." },
 ]
