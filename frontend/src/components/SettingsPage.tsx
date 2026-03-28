@@ -17,22 +17,22 @@ function ConversationDetail({ conv, onBack }: { conv: Conversation; onBack: () =
   }, [conv.id])
 
   return (
-    <div>
-      <button onClick={onBack} className="text-xs mb-4" style={{ color: '#f0c060' }}>← Back to history</button>
-      <h3 className="font-bold mb-1" style={{ color: '#f0c060' }}>{conv.title}</h3>
-      <p className="text-xs mb-4" style={{ color: '#888' }}>
+    <div className="flex flex-col h-full">
+      <button onClick={onBack} className="text-xs mb-4 self-start" style={{ color: '#f0c060' }}>← Back to history</button>
+      <h3 className="font-bold mb-1" style={{ color: '#f0c060', fontFamily: 'monospace' }}>{conv.title}</h3>
+      <p className="text-xs mb-4" style={{ color: '#888', fontFamily: 'monospace' }}>
         {new Date(conv.created_at).toLocaleString()} · {conv.llm_provider}
       </p>
-      <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+      <div className="flex-1 overflow-y-auto space-y-3 pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#3d1e00 #080200' }}>
         {messages.map((m) => (
-          <div key={m.id} className="text-xs">
-            <span style={{ color: agentColorMap[m.agent_id] ?? '#f0c060', fontWeight: 'bold' }}>
-              {agentNameMap[m.agent_id] ?? m.agent_id}:
-            </span>{' '}
-            <span style={{ color: '#c8b898' }}>{m.text}</span>
+          <div key={m.id} style={{ borderLeft: `2px solid ${agentColorMap[m.agent_id] ?? '#f0c060'}`, paddingLeft: '10px' }}>
+            <div className="text-xs font-bold mb-1" style={{ color: agentColorMap[m.agent_id] ?? '#f0c060', fontFamily: 'monospace' }}>
+              {agentNameMap[m.agent_id] ?? m.agent_id}
+            </div>
+            <div className="text-xs leading-relaxed" style={{ color: '#c8b898', fontFamily: 'monospace' }}>{m.text}</div>
           </div>
         ))}
-        {messages.length === 0 && <p style={{ color: '#666' }}>No messages.</p>}
+        {messages.length === 0 && <p className="text-xs" style={{ color: '#666', fontFamily: 'monospace' }}>No messages.</p>}
       </div>
     </div>
   )
@@ -47,19 +47,24 @@ function HistorySection() {
   if (selected) return <ConversationDetail conv={selected} onBack={() => setSelected(null)} />
 
   return (
-    <div>
-      <h3 className="font-bold mb-3" style={{ color: '#f0c060' }}>Conversation History</h3>
-      {conversations.length === 0 && <p className="text-xs" style={{ color: '#666' }}>No conversations yet.</p>}
-      <div className="space-y-2 max-h-72 overflow-y-auto pr-2">
+    <div className="flex flex-col h-full">
+      {conversations.length === 0 && (
+        <p className="text-xs" style={{ color: '#666', fontFamily: 'monospace' }}>No conversations yet.</p>
+      )}
+      <div className="flex-1 overflow-y-auto space-y-2 pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#3d1e00 #080200' }}>
         {conversations.map((c) => (
           <button
             key={c.id}
             onClick={() => setSelected(c)}
-            className="w-full text-left px-3 py-2 rounded text-xs"
-            style={{ background: '#1a0800', border: '1px solid #3d1e00' }}
+            className="w-full text-left px-4 py-3 rounded"
+            style={{ background: '#110500', border: '1px solid #3d1e00', transition: 'border-color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = '#f0c060')}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = '#3d1e00')}
           >
-            <div style={{ color: '#e8d8b0', fontWeight: 'bold' }}>{c.title}</div>
-            <div style={{ color: '#888' }}>{new Date(c.created_at).toLocaleDateString()} · {c.llm_provider}</div>
+            <div className="text-sm font-bold mb-1" style={{ color: '#e8d8b0', fontFamily: 'monospace' }}>{c.title}</div>
+            <div className="text-xs" style={{ color: '#666', fontFamily: 'monospace' }}>
+              {new Date(c.created_at).toLocaleDateString()} · {c.llm_provider}
+            </div>
           </button>
         ))}
       </div>
@@ -81,125 +86,179 @@ export default function SettingsPage({ onBack }: Props) {
   }
 
   const inputStyle = {
-    background: '#1a0800',
+    background: '#110500',
     border: '1px solid #5d3000',
     color: '#e8d8b0',
     fontFamily: 'monospace',
-    padding: '6px 10px',
+    padding: '8px 12px',
     borderRadius: '4px',
     width: '100%',
     fontSize: '13px',
   } as const
 
-  const labelStyle = { color: '#888', fontSize: '11px', marginBottom: '4px', display: 'block' } as const
+  const labelStyle = {
+    color: '#888',
+    fontSize: '11px',
+    marginBottom: '6px',
+    display: 'block',
+    fontFamily: 'monospace',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase' as const,
+  }
+
+  const TABS = [
+    { id: 'config' as const, label: '⚙ Config' },
+    { id: 'history' as const, label: '📜 History' },
+  ]
 
   return (
-    <div className="min-h-screen p-6 max-w-2xl mx-auto" style={{ fontFamily: 'monospace' }}>
-      <div className="flex items-center justify-between mb-6">
-        <button onClick={onBack} style={{ color: '#f0c060', fontSize: '13px' }}>← Back to Saloon</button>
-        <h1 className="text-lg font-bold" style={{ color: '#f0c060' }}>⚙️ Settings</h1>
-        {saved && <span style={{ color: '#88cc88', fontSize: '12px' }}>✓ Saved</span>}
+    <div style={{ height: '100dvh', background: '#0d0500', display: 'flex', flexDirection: 'column' }}>
+      {/* Top bar */}
+      <div
+        className="shrink-0 flex items-center justify-between px-6 py-3"
+        style={{ borderBottom: '2px solid #3d1e00', background: '#0d0500' }}
+      >
+        <button onClick={onBack} style={{ color: '#f0c060', fontSize: '13px', fontFamily: 'monospace' }}>
+          ← Back to Saloon
+        </button>
+        <span style={{ color: '#5d3a00', fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.2em' }}>
+          ★ THE SALOON ★
+        </span>
+        {saved
+          ? <span style={{ color: '#88cc88', fontSize: '12px', fontFamily: 'monospace' }}>✓ Saved</span>
+          : <span style={{ width: '60px' }} />
+        }
       </div>
 
-      <div className="flex gap-2 mb-6">
-        {(['config', 'history'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className="px-4 py-1 rounded text-sm capitalize"
-            style={{
-              background: tab === t ? '#f0c060' : '#1a0800',
-              color: tab === t ? '#000' : '#888',
-              border: '1px solid #3d1e00',
-            }}
+      {/* Centered panel */}
+      <div className="flex-1 flex justify-center min-h-0 px-4 py-6">
+        <div
+          className="flex flex-col w-full"
+          style={{ maxWidth: '680px' }}
+        >
+          {/* Tab bar */}
+          <div
+            className="shrink-0 flex mb-6"
+            style={{ borderBottom: '2px solid #3d1e00' }}
           >
-            {t}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'history' && <HistorySection />}
-
-      {tab === 'config' && settings && (
-        <div className="space-y-6">
-          <section>
-            <h3 className="font-bold mb-3" style={{ color: '#f0c060' }}>LLM Provider</h3>
-            <div className="space-y-3">
-              <div>
-                <label style={labelStyle}>Provider (claude | gemini | ollama)</label>
-                <select
-                  value={settings.llm_provider}
-                  onChange={(e) => { setSettings({ ...settings, llm_provider: e.target.value }); save('LLM_PROVIDER', e.target.value) }}
-                  style={inputStyle}
-                >
-                  <option value="claude">Claude (Anthropic)</option>
-                  <option value="gemini">Gemini (Google)</option>
-                  <option value="ollama">Ollama (local)</option>
-                </select>
-              </div>
-              {settings.llm_provider === 'ollama' && (
-                <>
-                  <div>
-                    <label style={labelStyle}>Ollama base URL</label>
-                    <input
-                      style={inputStyle}
-                      value={settings.ollama_base_url}
-                      onChange={(e) => setSettings({ ...settings, ollama_base_url: e.target.value })}
-                      onBlur={(e) => save('OLLAMA_BASE_URL', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Ollama model</label>
-                    <input
-                      style={inputStyle}
-                      value={settings.ollama_model}
-                      onChange={(e) => setSettings({ ...settings, ollama_model: e.target.value })}
-                      onBlur={(e) => save('OLLAMA_MODEL', e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="font-bold mb-3" style={{ color: '#f0c060' }}>Search Provider</h3>
-            <div>
-              <label style={labelStyle}>Provider (tavily | duckduckgo)</label>
-              <select
-                value={settings.search_provider}
-                onChange={(e) => { setSettings({ ...settings, search_provider: e.target.value }); save('SEARCH_PROVIDER', e.target.value) }}
-                style={inputStyle}
+            {TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  padding: '10px 28px',
+                  fontFamily: 'monospace',
+                  fontSize: '13px',
+                  fontWeight: tab === t.id ? 'bold' : 'normal',
+                  color: tab === t.id ? '#0d0500' : '#888',
+                  background: tab === t.id ? '#f0c060' : 'transparent',
+                  borderTop: tab === t.id ? '2px solid #f0c060' : '2px solid transparent',
+                  borderLeft: tab === t.id ? '2px solid #f0c060' : '2px solid transparent',
+                  borderRight: tab === t.id ? '2px solid #f0c060' : '2px solid transparent',
+                  borderBottom: tab === t.id ? '2px solid #0d0500' : 'none',
+                  marginBottom: tab === t.id ? '-2px' : '0',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
               >
-                <option value="tavily">Tavily (recommended)</option>
-                <option value="duckduckgo">DuckDuckGo (no API key)</option>
-              </select>
-            </div>
-          </section>
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-          <section>
-            <h3 className="font-bold mb-3" style={{ color: '#f0c060' }}>Conversation Speed</h3>
-            <div>
-              <label style={labelStyle}>
-                Delay between agents: {settings.conversation_delay_seconds}s
-              </label>
-              <input
-                type="range"
-                min={5}
-                max={60}
-                step={5}
-                value={parseInt(settings.conversation_delay_seconds) || 20}
-                onChange={(e) => setSettings({ ...settings, conversation_delay_seconds: e.target.value })}
-                onMouseUp={(e) => save('CONVERSATION_DELAY_SECONDS', (e.target as HTMLInputElement).value)}
-                style={{ width: '100%', accentColor: '#f0c060' }}
-              />
-              <div className="flex justify-between text-xs mt-1" style={{ color: '#666' }}>
-                <span>5s (fast)</span><span>60s (slow)</span>
+          {/* Tab content */}
+          <div className="flex-1 min-h-0">
+            {tab === 'history' && <HistorySection />}
+
+            {tab === 'config' && settings && (
+              <div className="overflow-y-auto h-full space-y-8 pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#3d1e00 #080200' }}>
+                <section>
+                  <h3 className="font-bold mb-4" style={{ color: '#f0c060', fontFamily: 'monospace', borderBottom: '1px solid #2a1000', paddingBottom: '8px' }}>
+                    LLM Provider
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label style={labelStyle}>Provider</label>
+                      <select
+                        value={settings.llm_provider}
+                        onChange={(e) => { setSettings({ ...settings, llm_provider: e.target.value }); save('LLM_PROVIDER', e.target.value) }}
+                        style={inputStyle}
+                      >
+                        <option value="claude">Claude (Anthropic)</option>
+                        <option value="gemini">Gemini (Google)</option>
+                        <option value="ollama">Ollama (local)</option>
+                      </select>
+                    </div>
+                    {settings.llm_provider === 'ollama' && (
+                      <>
+                        <div>
+                          <label style={labelStyle}>Ollama base URL</label>
+                          <input
+                            style={inputStyle}
+                            value={settings.ollama_base_url}
+                            onChange={(e) => setSettings({ ...settings, ollama_base_url: e.target.value })}
+                            onBlur={(e) => save('OLLAMA_BASE_URL', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Ollama model</label>
+                          <input
+                            style={inputStyle}
+                            value={settings.ollama_model}
+                            onChange={(e) => setSettings({ ...settings, ollama_model: e.target.value })}
+                            onBlur={(e) => save('OLLAMA_MODEL', e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="font-bold mb-4" style={{ color: '#f0c060', fontFamily: 'monospace', borderBottom: '1px solid #2a1000', paddingBottom: '8px' }}>
+                    Search Provider
+                  </h3>
+                  <div>
+                    <label style={labelStyle}>Provider</label>
+                    <select
+                      value={settings.search_provider}
+                      onChange={(e) => { setSettings({ ...settings, search_provider: e.target.value }); save('SEARCH_PROVIDER', e.target.value) }}
+                      style={inputStyle}
+                    >
+                      <option value="tavily">Tavily (recommended)</option>
+                      <option value="duckduckgo">DuckDuckGo (no API key)</option>
+                    </select>
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="font-bold mb-4" style={{ color: '#f0c060', fontFamily: 'monospace', borderBottom: '1px solid #2a1000', paddingBottom: '8px' }}>
+                    Conversation Speed
+                  </h3>
+                  <div>
+                    <label style={labelStyle}>
+                      Delay between agents: {settings.conversation_delay_seconds}s
+                    </label>
+                    <input
+                      type="range"
+                      min={5}
+                      max={60}
+                      step={5}
+                      value={parseInt(settings.conversation_delay_seconds) || 20}
+                      onChange={(e) => setSettings({ ...settings, conversation_delay_seconds: e.target.value })}
+                      onMouseUp={(e) => save('CONVERSATION_DELAY_SECONDS', (e.target as HTMLInputElement).value)}
+                      style={{ width: '100%', accentColor: '#f0c060' }}
+                    />
+                    <div className="flex justify-between text-xs mt-1" style={{ color: '#555', fontFamily: 'monospace' }}>
+                      <span>5s — fast</span><span>60s — slow</span>
+                    </div>
+                  </div>
+                </section>
               </div>
-            </div>
-          </section>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
