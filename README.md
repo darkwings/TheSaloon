@@ -9,7 +9,7 @@ A local web app where 6 AI agents with distinct personalities debate endlessly i
 | Prof. Isacco Quark | The Scientist | 🔵 |
 | Bobby Ray Buster | The Redneck | 🟠 |
 | Comrade Karl Rosso | The Communist | 🔴 |
-| Marco Buonsenso | The Center-Right | 🟢 |
+| Charles Pemberton | The Center-Right | 🟢 |
 | Gigi Bellavita | The Simple One | 🟡 |
 | Zoe Futura | The Young Idealist | 🩷 |
 
