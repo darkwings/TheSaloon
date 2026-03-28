@@ -9,35 +9,17 @@ interface Props {
 }
 
 export default function SpeechBubble({ text, color, align = 'center', onDismiss }: Props) {
-  const [displayed, setDisplayed] = useState('')
   const [visible, setVisible] = useState(true)
 
-  // Typewriter effect — then dismiss 4s after completion
+  // Show full text immediately, dismiss after 5s
   useEffect(() => {
-    setDisplayed('')
     setVisible(true)
-    let i = 0
-    let dismissTimer: ReturnType<typeof setTimeout>
-    let fadeTimer: ReturnType<typeof setTimeout>
-
-    const interval = setInterval(() => {
-      i++
-      setDisplayed(text.slice(0, i))
-      if (i >= text.length) {
-        clearInterval(interval)
-        // Start dismiss timer only after typewriting is done
-        dismissTimer = setTimeout(() => {
-          setVisible(false)
-          fadeTimer = setTimeout(onDismiss, 300)
-        }, 4000)
-      }
-    }, 20)
-
-    return () => {
-      clearInterval(interval)
-      clearTimeout(dismissTimer)
-      clearTimeout(fadeTimer)
-    }
+    const dismissTimer = setTimeout(() => {
+      setVisible(false)
+      const fadeTimer = setTimeout(onDismiss, 300)
+      return () => clearTimeout(fadeTimer)
+    }, 5000)
+    return () => clearTimeout(dismissTimer)
   }, [text, onDismiss])
 
   const alignClass =
@@ -68,7 +50,7 @@ export default function SpeechBubble({ text, color, align = 'center', onDismiss 
           wordBreak: 'break-word',
         }}
       >
-        {displayed}
+        {text}
         {/* tail */}
         <div
           className="absolute left-1/2 -translate-x-1/2 top-full"
