@@ -33,13 +33,22 @@ cp .env.example .env
 
 ### 2. Backend
 
+First install:
+
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
 ```
+
+Then start (every time):
+
+```bash
+./backend/start.sh
+```
+
+The script activates the virtualenv and launches uvicorn on port 8000.
 
 ### 3. Frontend
 
