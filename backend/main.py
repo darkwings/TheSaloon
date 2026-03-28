@@ -47,12 +47,14 @@ async def lifespan(app: FastAPI):
     ollama_base_url = await settings.get("OLLAMA_BASE_URL", default="http://localhost:11434")
     agents = build_agents(model_string=model_string, search_tool=search_tool, ollama_base_url=ollama_base_url)
     delay = await settings.get_delay()
+    ollama_config = {"model": model_string, "api_base": ollama_base_url} if model_string.startswith("ollama/") else None
 
     engine = ConversationEngine(
         agents=agents,
         broadcast=broadcast,
         db=db,
         delay=delay,
+        ollama_config=ollama_config,
     )
     yield
     if engine:
@@ -96,7 +98,11 @@ async def start_conversation(req: StartRequest):
     api_key = await settings.get("TAVILY_API_KEY") if search_provider == "tavily" else None
     search_tool = make_search_tool(provider=search_provider, api_key=api_key)
     ollama_base_url = await settings.get("OLLAMA_BASE_URL", default="http://localhost:11434")
-    engine.update_agents(build_agents(model_string=model_string, search_tool=search_tool, ollama_base_url=ollama_base_url))
+    ollama_config = {"model": model_string, "api_base": ollama_base_url} if model_string.startswith("ollama/") else None
+    engine.update_agents(
+        build_agents(model_string=model_string, search_tool=search_tool, ollama_base_url=ollama_base_url),
+        ollama_config=ollama_config,
+    )
     conv_id = await engine.start(topic=req.topic, llm_provider=llm_provider)
     return {"conversation_id": conv_id}
 

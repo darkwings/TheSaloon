@@ -17,11 +17,13 @@ class ConversationEngine:
         broadcast: Callable,
         db: Any,
         delay: int = 20,
+        ollama_config: dict | None = None,
     ):
         self._agents = agents
         self._broadcast = broadcast
         self._db = db
         self._delay = delay
+        self._ollama_config = ollama_config  # {"model": "ollama/llama3.2", "api_base": "http://..."}
         self._task: asyncio.Task | None = None
         self._running = asyncio.Event()
         self._stopped = False
@@ -30,8 +32,9 @@ class ConversationEngine:
         self._moderator_input: str = ""
         self._conversation_id: int | None = None
 
-    def update_agents(self, agents: list[LlmAgent]):
+    def update_agents(self, agents: list[LlmAgent], ollama_config: dict | None = None):
         self._agents = agents
+        self._ollama_config = ollama_config
 
     async def start(self, topic: str, llm_provider: str) -> int:
         self._topic = topic
@@ -82,7 +85,15 @@ class ConversationEngine:
     async def _run_one_agent(
         self, agent: LlmAgent, topic: str, history: str, moderator_input: str
     ) -> str:
-        """Run a single agent turn via ADK InMemoryRunner. Returns the response text."""
+        """Run a single agent turn. Uses direct LiteLLM for Ollama, ADK for everything else."""
+        if self._ollama_config:
+            return await self._run_one_agent_direct(agent, topic, history, moderator_input)
+        return await self._run_one_agent_adk(agent, topic, history, moderator_input)
+
+    async def _run_one_agent_adk(
+        self, agent: LlmAgent, topic: str, history: str, moderator_input: str
+    ) -> str:
+        """ADK path — used for Claude and Gemini."""
         runner = InMemoryRunner(agent=agent, app_name="the_saloon")
         session = await runner.session_service.create_session(
             app_name="the_saloon",
@@ -106,6 +117,28 @@ class ConversationEngine:
             if event.is_final_response() and event.content and event.content.parts:
                 response_text = event.content.parts[0].text or ""
         return response_text.strip()
+
+    async def _run_one_agent_direct(
+        self, agent: LlmAgent, topic: str, history: str, moderator_input: str
+    ) -> str:
+        """Direct LiteLLM path — used for Ollama to avoid ADK overhead that confuses local models."""
+        import litellm
+        persona = AGENT_PERSONAS.get(agent.name, {})
+        system_prompt = (
+            persona.get("instruction", "")
+            .replace("{topic}", topic)
+            .replace("{conversation_history}", history)
+            .replace("{moderator_input}", moderator_input if moderator_input else "(none)")
+        )
+        response = await litellm.acompletion(
+            model=self._ollama_config["model"],
+            api_base=self._ollama_config["api_base"],
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": "Continue the conversation in character."},
+            ],
+        )
+        return (response.choices[0].message.content or "").strip()
 
     async def _loop(self):
         while not self._stopped:
@@ -140,7 +173,7 @@ class ConversationEngine:
                     await self._broadcast({"type": "agent_thinking", "agent": None})
                     continue
 
-                if not text or text.startswith("[SKIP]"):
+                if not text or "[skip]" in text.lower().strip()[:20]:
                     await self._broadcast({"type": "agent_thinking", "agent": None})
                     continue
 
