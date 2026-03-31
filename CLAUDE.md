@@ -11,9 +11,9 @@ frontend/    React 18 + Vite + TypeScript + Tailwind + Zustand
 backend/     FastAPI + Python 3.11+ + Google ADK + LiteLLM + SQLite
 ```
 
-- **Frontend** talks to backend via REST (commands) and WebSocket (receive-only stream of events)
+- **Frontend** talks to backend via REST (commands) and SSE (receive-only stream of events)
 - **Backend** runs an infinite asyncio loop (`ConversationEngine`) that shuffles and runs 6 ADK `LlmAgent` instances each cycle
-- **WebSocket** is server → client only. All commands (start, pause, resume, inject) go through REST
+- **SSE** (`/events`) is server → client only. All commands (start, pause, resume, inject) go through REST
 - **SQLite** at `backend/the_saloon.db` stores conversations, messages, settings
 
 ## Key files
@@ -32,7 +32,8 @@ backend/
 frontend/src/
   types.ts         Shared types: AgentId, AGENTS, WsEvent, ChatMessage, etc.
   store/saloonStore.ts   Zustand store: messages, status, thinkingAgent, topic
-  hooks/useWebSocket.ts  WS auto-reconnect hook → dispatches into store
+  hooks/useEventSource.ts  SSE auto-reconnect hook → dispatches into store
+  hooks/useTTS.ts          Text-to-speech hook (speak/stop)
   api/client.ts    REST helpers
   components/
     SaloonPage.tsx   Root: scene + log + input
@@ -90,7 +91,7 @@ See `.env.example`. Key settings:
 | `OLLAMA_MODEL` | `llama3.2` | Ollama only |
 | `SEARCH_PROVIDER` | `tavily` | tavily / duckduckgo |
 | `TAVILY_API_KEY` | — | Required for Tavily |
-| `CONVERSATION_DELAY_SECONDS` | `20` | Delay between agent turns |
+| `CONVERSATION_DELAY_SECONDS` | `8` | Delay between agent turns |
 
 All settings can be overridden at runtime via the Settings page (stored in SQLite, take precedence over `.env`).
 
@@ -101,7 +102,7 @@ All settings can be overridden at runtime via the Settings page (stored in SQLit
 | `prof_quark` | Prof. Isacco Quark | `#88aaff` | The Scientist |
 | `bobby_ray` | Bobby Ray Buster | `#ff6644` | The Redneck |
 | `karl_rosso` | Comrade Karl Rosso | `#ff4444` | The Communist |
-| `marco_buonsenso` | Marco Buonsenso | `#88cc88` | The Center-Right |
+| `charles_pemberton` | Charles Pemberton | `#88cc88` | The Center-Right |
 | `gigi_bellavita` | Gigi Bellavita | `#ffcc44` | The Simple One |
 | `zoe_futura` | Zoe Futura | `#ff88cc` | The Young Idealist |
 
@@ -116,7 +117,7 @@ Agents respond in the moderator's language (follow-the-moderator language rule i
 - Pause/resume: `asyncio.Event` — `clear()` to pause, `set()` to resume
 - **[SKIP] mechanic**: Agents can reply `[SKIP]` when they have nothing relevant to add. The engine detects this, clears the `agent_thinking` indicator, skips the delay, and moves on. This makes the debate feel more natural — not every agent speaks every round. Moderator input always suppresses skip.
 
-## WebSocket events (server → client)
+## SSE events (server → client, `GET /events`)
 
 ```json
 { "type": "message",       "agent": "bobby_ray", "agent_name": "Bobby Ray Buster", "text": "...", "timestamp": "..." }
@@ -135,10 +136,11 @@ POST /api/conversations/resume
 POST /api/conversations/inject   { text }
 GET  /api/conversations          → list
 GET  /api/conversations/{id}     → { conversation, messages }
+DELETE /api/conversations/{id}   → { status: "deleted" }
 GET  /api/settings               → { llm_provider, search_provider, ... }
 PUT  /api/settings               { key, value }   key must match ^[A-Za-z][A-Za-z0-9_]*$
 GET  /api/health                 → { status: "ok" }
-WS   /ws                         → real-time event stream
+GET  /events                     → SSE stream (text/event-stream)
 ```
 
 ## Design decisions and non-obvious choices
